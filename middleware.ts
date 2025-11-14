@@ -4,6 +4,8 @@ import { createServerClient } from "@supabase/ssr"
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
+
+  // Initialize Supabase server client using cookies
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -16,19 +18,30 @@ export async function middleware(req: NextRequest) {
     },
   )
 
-  const { data } = await supabase.auth.getUser()
-  const isAdminPath = req.nextUrl.pathname.startsWith("/admin")
+  // Fetch the current user session securely
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  if (isAdminPath) {
-    if (!data.user || data.user.user_metadata?.role !== "admin") {
-      const url = new URL("/login", req.url)
-      url.searchParams.set("redirect", req.nextUrl.pathname)
-      return NextResponse.redirect(url)
-    }
+  const pathname = req.nextUrl.pathname
+
+  // ✅ Protect routes that require authentication
+  const protectedRoutes = ["/dashboard", "/analytics"]
+
+  if (protectedRoutes.some((path) => pathname.startsWith(path)) && !session) {
+    const loginUrl = new URL("/login", req.url)
+    loginUrl.searchParams.set("redirect", pathname)
+    return NextResponse.redirect(loginUrl)
   }
+
+  // ✅ Prevent logged-in users from seeing login or home page
+  if ((pathname === "/" || pathname === "/login") && session) {
+    return NextResponse.redirect(new URL("/dashboard", req.url))
+  }
+
   return res
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/analytics/:path*", "/", "/login"],
 }
