@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+import Script from "next/script"
 import "./globals.css"
 
 import SupabaseProvider from "@/components/SupabaseProvider"
@@ -11,15 +12,16 @@ import { getSupabaseServer } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
   title: "ProdHealth – Smart Food Scanner",
-  description: "Scan Indian packaged foods, see ingredients & nutrition, and get a health score out of 100.",
+  description:
+    "Scan Indian packaged foods, see ingredients & nutrition, and get a health score out of 100.",
   generator: "v0.app",
 }
 
 export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   const supabase = getSupabaseServer()
   const {
     data: { session },
@@ -27,10 +29,28 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
+      <body
+        className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}
+      >
         <SupabaseProvider session={session}>
           <Suspense fallback={null}>{children}</Suspense>
         </SupabaseProvider>
+
+        {/* Plausible Analytics */}
+        <Script
+          strategy="afterInteractive"
+          src="https://plausible.io/js/pa-m5CndlTyuAceNmLf6uerd.js"
+        />
+        <Script id="plausible-init" strategy="afterInteractive">
+          {`
+            window.plausible = window.plausible || function() {
+              (plausible.q = plausible.q || []).push(arguments)
+            };
+            plausible.init();
+          `}
+        </Script>
+
+        {/* Vercel Analytics (optional, can keep both) */}
         <Analytics />
       </body>
     </html>
