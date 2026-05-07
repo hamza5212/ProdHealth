@@ -36,20 +36,24 @@ export default async function RootLayout({
           <Suspense fallback={null}>{children}</Suspense>
         </SupabaseProvider>
 
-        {/* Plausible Analytics */}
-        <Script
-          strategy="afterInteractive"
-          src="https://plausible.io/js/pa-m5CndlTyuAceNmLf6uerd.js"
-        />
-        <Script id="plausible-init" strategy="afterInteractive">
-          {`
-            window.plausible = window.plausible || function() {
-              (plausible.q = plausible.q || []).push(arguments)
-            };
-            plausible.init();
-          `}
-        </Script>
+        
+{/* Plausible Analytics */}
+<Script
+  async
+  src="https://plausible.io/js/pa-6D0wHujA4_luHO5SDkkHB.js"
+/>
 
+<Script id="plausible-init">
+  {`
+    window.plausible = window.plausible || function() {
+      (plausible.q = plausible.q || []).push(arguments)
+    };
+    plausible.init = plausible.init || function(i) {
+      plausible.o = i || {};
+    };
+    plausible.init();
+  `}
+</Script>
         {/* Vercel Analytics (optional, can keep both) */}
         <Analytics />
       </body>
